@@ -70,8 +70,6 @@ class BCNFSplitter:
                 i -= 1
             i += 1
 
-        print tables
-        exit()
         return tables
 
     def _violated_fd(self, table):
@@ -88,11 +86,11 @@ class BCNFSplitter:
 
 
 @click.command()
-@click.option('--header', default=True, help='bool: Header for Data File')
+# @click.option('--header', default=True, help='bool: Header for Data File')
 @click.option('--fdfile', default=None, help='Functional Dependency File Name')
 @click.option('--outfile', default=None, help='Output File Name')
 @click.argument('filename')
-def csv_to_graph(filename, header, fdfile, outfile):
+def csv_to_graph(filename, fdfile, outfile):
 
     if outfile is not None:
         sys.stdout = open(outfile, 'w')
@@ -101,8 +99,8 @@ def csv_to_graph(filename, header, fdfile, outfile):
 
     f = open(filename, 'r')
 
-    if header is True:
-        colnames = f.readline()
+    # if header is True:
+    colnames = f.readline()
 
     if fdfile is not None:
         splitter = BCNFSplitter(filename, fdfile)

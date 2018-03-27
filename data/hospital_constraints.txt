@@ -1,0 +1,9 @@
+ZipCode-City
+ZipCode-State
+PhoneNumber-ZipCode
+PhoneNumber-City
+PhoneNumber-State
+ProviderNumber,MeasureCode-Stateavg
+MeasureCode-MeasureName
+MeasureCode-Condition
+State,MeasureCode-Stateavg

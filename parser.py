@@ -70,6 +70,8 @@ class BCNFSplitter:
                 i -= 1
             i += 1
 
+        print tables
+        exit()
         return tables
 
     def _violated_fd(self, table):
@@ -80,8 +82,7 @@ class BCNFSplitter:
             if all([s in table.columns for s in left]) \
                     and right in table.columns \
                     and not table.shape[1] == len(left) + 1:
-                    if any(table.groupby(left)[right].nunique() > 1):
-                        return self.fds.index(fd)
+                return self.fds.index(fd)
 
         return -1
 

@@ -7,38 +7,56 @@ class Parser:
     def __init__(self):
         self.edges = set()
 
-        # maps unique nodes to ints - just for output formatting
+        # maps unique nodes to ints
         self.int_map = dict()
         self.curr = 0
 
+        # init count maps - used for determining weights of edges
+
         # maps edges to occurrence count
-        self.count_map = dict()
+        self.edge_count_map = dict()
+
+        # maps nodes to occurrence count
+        self.node_count_map = dict()
 
     def _map_node(self, node):
         if node not in self.int_map:
             self.int_map[node] = self.curr
             self.curr += 1
 
-    def _map_edge(self, edge):
+    def _count_edge(self, edge):
         if edge not in self.edges:
-            self.count_map[edge] = 1
+            self.edge_count_map[edge] = 1
         else:
-            self.count_map[edge] += 1
+            self.edge_count_map[edge] += 1
+
+    def _count_node(self, node):
+        int_node = self.int_map[node]
+        if int_node not in self.node_count_map:
+            self.node_count_map[int_node] = 1
+        else:
+            self.node_count_map[int_node] += 1
 
     def add_edge(self, node_1, node_2):
         self._map_node(node_1)
         self._map_node(node_2)
 
+        self._count_node(node_1)
+
         edge = (self.int_map[node_1], self.int_map[node_2])
-        self._map_edge(edge)
+        self._count_edge(edge)
 
         self.edges.add(edge)
 
     def print_edges(self, out, weighted):
         for edge in sorted(self.edges):
             str_edge = str(edge[0]) + ' ' + str(edge[1])
-            if weighted:
-                str_edge += ' ' + str(self.count_map[edge])
+
+            if weighted == 'count':
+                str_edge += ' ' + str(self.edge_count_map[edge])
+            elif weighted == 'proportion':
+                prop = float(self.edge_count_map[edge]) / self.node_count_map[edge[0]]
+                str_edge += ' ' + str(prop)
 
             if out is None:
                 print str_edge
@@ -108,9 +126,9 @@ class BCNFSplitter:
 @click.command()
 @click.option('--fdfile', '-f', default=None, help='Functional Dependency File Name')
 @click.option('--outfile', '-o', default=None, help='Output File Name')
-@click.option('--weighted', '-w', is_flag=True)
+@click.option('--weighting', '-w', type=click.Choice(['count', 'proportion']))
 @click.argument('filename')
-def csv_to_graph(filename, fdfile, outfile, weighted):
+def csv_to_graph(filename, fdfile, outfile, weighting):
 
     parser = Parser()
 
@@ -145,8 +163,8 @@ def csv_to_graph(filename, fdfile, outfile, weighted):
         out = open(outfile, 'w')
     else:
         out = None
-        
-    parser.print_edges(out, weighted)
+
+    parser.print_edges(out, weighting)
 
 
 if __name__ == '__main__':

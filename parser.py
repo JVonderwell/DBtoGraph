@@ -3,6 +3,14 @@ import sys
 import pandas as pd
 
 
+class Node:
+    # a value, attribute pair
+
+    def __init__(self, val, col_index):
+        self.val = val
+        self.index = col_index
+
+
 class Parser:
 
     def __init__(self):
@@ -15,18 +23,19 @@ class Parser:
             self.int_map[node] = self.curr
             self.curr += 1
 
-    def add_edge(self, val_1, index_1, val_2, index_2):
-        node_1 = (val_1, index_1)
-        node_2 = (val_2, index_2)
-
+    def add_edge(self, node_1, node_2):
         self._map_node(node_1)
         self._map_node(node_2)
 
         self.edges.add((self.int_map[node_1], self.int_map[node_2]))
 
-    def print_edges(self):
+    def print_edges(self, out=None):
         for edge in sorted(self.edges):
-            print str(edge[0]) + ' ' + str(edge[1])
+            str_edge =str(edge[0]) + ' ' + str(edge[1])
+            if out is None:
+                print str_edge
+            else:
+                out.write(str_edge + '\n')
 
 
 class BCNFSplitter:
@@ -39,6 +48,7 @@ class BCNFSplitter:
 
         fdf = open(fd_file, 'r')
 
+        # each fd maps list of cols to one col
         for line in fdf:
             split_fd = line.split('-')
             left = tuple(split_fd[0].split(','))
@@ -48,10 +58,12 @@ class BCNFSplitter:
     def split_data(self):
         # returns normalized list of list of column indices
         # ex: [[1, 3], [1,2,4]]
+
+        # start with all cols
         tables = [range(self.data.shape[1])]
         i = 0
         while i < len(tables):
-            table = self.data.iloc[:, tables[i]].drop_duplicates()
+            table = self.data.iloc[:, tables[i]]
             viol_fd = self._violated_fd(table)
             if viol_fd != -1:
                 a = self.data.columns.get_loc(self.fds[viol_fd][1])
@@ -86,20 +98,15 @@ class BCNFSplitter:
 
 
 @click.command()
-# @click.option('--header', default=True, help='bool: Header for Data File')
 @click.option('--fdfile', default=None, help='Functional Dependency File Name')
 @click.option('--outfile', default=None, help='Output File Name')
 @click.argument('filename')
 def csv_to_graph(filename, fdfile, outfile):
 
-    if outfile is not None:
-        sys.stdout = open(outfile, 'w')
-
     parser = Parser()
 
     f = open(filename, 'r')
 
-    # if header is True:
     colnames = f.readline()
 
     if fdfile is not None:
@@ -114,12 +121,23 @@ def csv_to_graph(filename, fdfile, outfile):
             for i in range(len(table) - 1):
                 col_1 = table[i]
                 col_2 = table[i+1]
-                parser.add_edge(split[col_1], col_1, split[col_2], col_2)
+                node_1 = Node(split[col_1], col_1)
+                node_2 = Node(split[col_2], col_2)
+                parser.add_edge(node_1, node_2)
+
+            # add edges for last col to first col
             col_1 = table[0]
             col_2 = table[len(table) - 1]
-            parser.add_edge(split[col_2], col_2, split[col_1], col_1)
+            node_1 = Node(split[col_1], col_1)
+            node_2 = Node(split[col_2], col_2)
+            parser.add_edge(node_1, node_2)
 
-    parser.print_edges()
+    if outfile is not None:
+        out = open(outfile, 'w')
+    else:
+        out = None
+        
+    parser.print_edges(out)
 
 
 if __name__ == '__main__':

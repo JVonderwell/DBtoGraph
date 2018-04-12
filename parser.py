@@ -20,17 +20,20 @@ class Parser:
         self.node_count_map = dict()
 
     def _map_node(self, node):
+        # maps unique (val, attr) pairs to ints
         if node not in self.int_map:
             self.int_map[node] = self.curr
             self.curr += 1
 
     def _count_edge(self, edge):
+        # counts appearances of edge - used for weighting
         if edge not in self.edges:
             self.edge_count_map[edge] = 1
         else:
             self.edge_count_map[edge] += 1
 
     def _count_node(self, node):
+        # counts appearance of node on left side of edge
         int_node = self.int_map[node]
         if int_node not in self.node_count_map:
             self.node_count_map[int_node] = 1
@@ -38,6 +41,7 @@ class Parser:
             self.node_count_map[int_node] += 1
 
     def add_edge(self, node_1, node_2):
+        # takes two (val, attr) tuples and adds an edge between them
         self._map_node(node_1)
         self._map_node(node_2)
 
@@ -124,9 +128,11 @@ class BCNFSplitter:
 
 
 @click.command()
-@click.option('--fdfile', '-f', default=None, help='Functional Dependency File Name')
+@click.option('--fdfile', '-f', default=None,
+              help='Functional Dependency File Name')
 @click.option('--outfile', '-o', default=None, help='Output File Name')
-@click.option('--weighting', '-w', type=click.Choice(['count', 'proportion']))
+@click.option('--weighting', '-w', type=click.Choice(['count', 'proportion']),
+              help = "Type of Weighting")
 @click.argument('filename')
 def csv_to_graph(filename, fdfile, outfile, weighting):
 
